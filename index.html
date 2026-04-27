@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MA Deed Lookup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink: #0e1117;
+  --ink2: #3a3f4b;
+  --ink3: #7a8192;
+  --rule: #d8dce6;
+  --rule2: #ebedf2;
+  --page: #f5f6f9;
+  --white: #ffffff;
+  --blue: #1a5fdf;
+  --blue-lt: #e8effe;
+  --blue-border: #b3c9f7;
+  --green: #0f7b4a;
+  --green-lt: #e6f5ee;
+  --green-border: #8ed4b1;
+  --amber: #92520a;
+  --amber-lt: #fef5e7;
+  --amber-border: #f5c97a;
+  --red: #c0392b;
+  --red-lt: #fdf0ee;
+  --red-border: #f0b3ab;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+
+body {
+  background: var(--page);
+  font-family: var(--sans);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ── */
+header {
+  background: var(--ink);
+  color: #fff;
+  padding: 0 32px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.logo {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-mark {
+  width: 22px; height: 22px;
+  border: 1.5px solid rgba(255,255,255,0.4);
+  border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+}
+.logo-mark svg { width: 11px; height: 11px; }
+.header-right {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.06em;
+}
+
+/* ── Main ── */
+main {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 20px 60px;
+}
+
+.card {
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  width: 100%;
+  max-width: 560px;
+  overflow: hidden;
+}
+
+/* ── Card sections ── */
+.card-header {
+  padding: 22px 28px 20px;
+  border-bottom: 1px solid var(--rule2);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.card-title {
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--ink);
+}
+.card-sub {
+  font-size: 12px;
+  color: var(--ink3);
+  margin-top: 3px;
+  font-family: var(--mono);
+}
+
+/* Status badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  padding: 4px 9px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  border: 1px solid;
+}
+.badge.matched  { background: var(--green-lt); color: var(--green); border-color: var(--green-border); }
+.badge.warning  { background: var(--amber-lt); color: var(--amber); border-color: var(--amber-border); }
+.badge.error    { background: var(--red-lt);   color: var(--red);   border-color: var(--red-border); }
+.badge.loading  { background: var(--blue-lt);  color: var(--blue);  border-color: var(--blue-border); }
+.badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* ── Parcel data table ── */
+.data-section {
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--rule2);
+}
+.section-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 12px;
+}
+.data-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.data-cell {
+  padding: 10px 12px;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.data-cell:nth-child(even) { border-right: none; }
+.data-cell:nth-last-child(-n+2) { border-bottom: none; }
+.data-cell.full {
+  grid-column: 1 / -1;
+  border-right: none;
+}
+.data-key {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 3px;
+}
+.data-val {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: 500;
+  word-break: break-all;
+}
+.data-val.accent { color: var(--blue); }
+.data-val.big    { font-size: 20px; letter-spacing: 0.02em; }
+.data-val.empty  { color: var(--ink3); font-weight: 400; font-size: 11px; }
+
+/* ── Registry section ── */
+.registry-section {
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--rule2);
+}
+.registry-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.registry-icon {
+  width: 30px; height: 30px;
+  background: var(--blue-lt);
+  border: 1px solid var(--blue-border);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.registry-icon svg { width: 14px; height: 14px; color: var(--blue); }
+.registry-name  { font-size: 14px; font-weight: 500; color: var(--ink); }
+.registry-towns {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink3);
+  line-height: 1.5;
+  margin-top: 4px;
+}
+.search-tip {
+  font-size: 12px;
+  color: var(--ink2);
+  line-height: 1.6;
+  padding: 10px 12px;
+  background: var(--blue-lt);
+  border-left: 3px solid var(--blue);
+  border-radius: 0 3px 3px 0;
+  margin-top: 10px;
+}
+.search-tip strong { font-weight: 500; }
+
+/* ── Action section ── */
+.action-section {
+  padding: 20px 28px;
+}
+.btn-deed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 20px;
+  background: var(--ink);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.12s, transform 0.1s;
+  letter-spacing: 0.01em;
+}
+.btn-deed:hover  { background: #1a1f2e; transform: translateY(-1px); }
+.btn-deed:active { transform: translateY(0); }
+.btn-deed svg    { width: 16px; height: 16px; flex-shrink: 0; }
+.btn-deed.disabled {
+  background: var(--rule);
+  color: var(--ink3);
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none;
+}
+
+.copy-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.btn-copy {
+  flex: 1;
+  padding: 9px 12px;
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink2);
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn-copy:hover { border-color: var(--ink2); background: var(--page); }
+.btn-copy svg   { width: 12px; height: 12px; }
+.btn-copy.copied { border-color: var(--green-border); color: var(--green); background: var(--green-lt); }
+
+/* ── No-params state ── */
+.empty-state {
+  padding: 48px 28px;
+  text-align: center;
+}
+.empty-icon {
+  width: 44px; height: 44px;
+  background: var(--rule2);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+}
+.empty-title { font-size: 15px; font-weight: 500; margin-bottom: 8px; }
+.empty-body  { font-size: 13px; color: var(--ink3); line-height: 1.6; }
+.empty-code  {
+  display: inline-block;
+  margin-top: 16px;
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--page);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 10px 14px;
+  text-align: left;
+  color: var(--ink2);
+  line-height: 1.8;
+  word-break: break-all;
+}
+
+/* ── Error state ── */
+.error-state {
+  padding: 32px 28px;
+}
+.error-box {
+  background: var(--red-lt);
+  border: 1px solid var(--red-border);
+  border-radius: 4px;
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--red);
+  line-height: 1.6;
+}
+
+/* ── Footer ── */
+footer {
+  text-align: center;
+  padding: 20px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink3);
+  letter-spacing: 0.05em;
+}
+footer a { color: var(--blue); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+.pulse { animation: pulse 1.4s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 11 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="4" height="4" fill="white" opacity="0.7"/>
+        <rect x="6" y="1" width="4" height="4" fill="white" opacity="0.4"/>
+        <rect x="1" y="6" width="4" height="4" fill="white" opacity="0.4"/>
+        <rect x="6" y="6" width="4" height="4" fill="white" opacity="0.7"/>
+      </svg>
+    </div>
+    MA DEED LOOKUP
+  </div>
+  <div class="header-right">MASSGIS L3 · 21 REGISTRIES</div>
+</header>
+
+<main>
+  <div class="card" id="card">
+    <!-- Content injected by JS -->
+    <div class="empty-state">
+      <div class="empty-icon">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="8" stroke="#7a8192" stroke-width="1.5"/>
+          <path d="M10 6v5M10 13v1" stroke="#7a8192" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="empty-title">Loading parcel data…</div>
+      <div class="empty-body">Reading URL parameters.</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Parcel data: <a href="https://www.mass.gov/info-details/massgis-data-property-tax-parcels" target="_blank">MassGIS Level 3</a>
+  &nbsp;·&nbsp;
+  Registry portals: <a href="https://www.masslandrecords.com/" target="_blank">masslandrecords.com</a> &amp; individual registries
+  &nbsp;·&nbsp;
+  Book/page from <code>LS_BOOK</code> / <code>LS_PAGE</code> fields
+</footer>
+
+<script>
+// ── Registry data ────────────────────────────────────────────────────────────
+const REGISTRIES = {
+  "Barnstable":        { name:"Barnstable County Registry",            url:"https://www.barnstabledeeds.org/",               tip:"Search Recorded Land → Book & Page Search." },
+  "Berkshire North":   { name:"Berkshire North Registry (Adams)",       url:"https://www.masslandrecords.com/BerkNorth/",      tip:"MassLandRecords: Search Criteria → Book/Page Search." },
+  "Berkshire Middle":  { name:"Berkshire Middle Registry (Pittsfield)", url:"https://www.masslandrecords.com/BerkMiddle/",     tip:"MassLandRecords: Search Criteria → Book/Page Search." },
+  "Berkshire South":   { name:"Berkshire South Registry (Gt Barrington)",url:"https://www.masslandrecords.com/BerkSouth/",    tip:"MassLandRecords: Search Criteria → Book/Page Search." },
+  "Bristol North":     { name:"Bristol North Registry (Taunton)",       url:"https://www.tauntondeeds.com/",                  tip:"Search Criteria → Book/Page Search. Enter book then page." },
+  "Bristol South":     { name:"Bristol South Registry (New Bedford)",   url:"https://newbedforddeeds.com/",                   tip:"Use Book/Page search from the top navigation." },
+  "Bristol Fall River":{ name:"Bristol Fall River Registry",            url:"https://www.masslandrecords.com/BristolFR/",     tip:"MassLandRecords: Search Criteria → Book/Page Search." },
+  "Dukes":             { name:"Dukes County Registry (Martha's Vineyard)",url:"https://www.masslandrecords.com/Dukes/",       tip:"MassLandRecords: Search Criteria → Book/Page Search." },
+  "Essex North":       { name:"Essex North Registry (Lawrence)",        url:"https://www.masslandrecords.com/EssexNorth/",    tip:"MassLandRecords: Search Criteria → Book/Page Search." },
+  "Essex South":       { name:"Essex South Registry (Salem)",           url:"https://www.masslandrecords.com/EssexSouth/",    tip:"MassLandRecords: Search Criteria → Book/Page Search." },
+  "Franklin":          { name:"Franklin County Registry (Greenfield)",  url:"https://www.masslandrecords.com/Franklin/",      tip:"MassLandRecords: Search Criteria → Book/Page Search." },
+  "Hampden":           { name:"Hampden County Registry (Springfield)",  url:"https://www.hampdendeeds.com/",                  tip:"Click Search, then choose Book/Page. Enter book number and page." },
+  "Hampshire":         { name:"Hampshire County Registry (Northampton)",url:"https://www.hampshiredeeds.com/",               tip:"Use the Book & Page search option in the search menu." },
+  "Middlesex North":   { name:"Middlesex North Registry (Lowell)",      url:"https://www.lowelldeeds.com/",                   tip:"Search Criteria → Book/Page Search. Enter book then page." },
+  "Middlesex South":   { name:"Middlesex South Registry (Cambridge)",   url:"https://www.middlesexsouthregistry.com/",        tip:"Click Search → Book/Page option. Largest registry in MA." },
+  "Nantucket":         { name:"Nantucket County Registry",              url:"https://www.masslandrecords.com/Nantucket/",     tip:"MassLandRecords: Search Criteria → Book/Page Search." },
+  "Norfolk":           { name:"Norfolk County Registry (Dedham)",       url:"https://www.norfolkdeeds.org/",                  tip:"Click 'Begin Online Research', then choose Book & Page search." },
+  "Plymouth":          { name:"Plymouth County Registry",               url:"https://www.masslandrecords.com/Plymouth/",      tip:"MassLandRecords: Search Criteria → Book/Page Search." },
+  "Suffolk":           { name:"Suffolk County Registry (Boston)",       url:"https://www.masslandrecords.com/Suffolk/",       tip:"MassLandRecords: Search Criteria → Book/Page Search." },
+  "Worcester":         { name:"Worcester District Registry",            url:"https://www.masslandrecords.com/worcester/",     tip:"MassLandRecords: Search Criteria → Book/Page Search." },
+  "Worcester North":   { name:"Worcester North Registry (Fitchburg)",   url:"https://www.masslandrecords.com/WorcesterNorth/",tip:"MassLandRecords: Search Criteria → Book/Page Search." }
+};
+
+// ── Town → Registry (all 351 MA municipalities) ──────────────────────────────
+const TOWN_TO_REGISTRY = {
+  "Abington":"Plymouth","Acton":"Middlesex South","Acushnet":"Bristol South","Adams":"Berkshire North",
+  "Agawam":"Hampden","Alford":"Berkshire South","Amesbury":"Essex South","Amherst":"Hampshire",
+  "Andover":"Essex North","Aquinnah":"Dukes","Arlington":"Middlesex South","Ashburnham":"Worcester North",
+  "Ashby":"Middlesex South","Ashfield":"Franklin","Ashland":"Middlesex South","Athol":"Worcester",
+  "Attleboro":"Bristol North","Auburn":"Worcester","Avon":"Norfolk","Ayer":"Middlesex South",
+  "Barnstable":"Barnstable","Barre":"Worcester","Becket":"Berkshire Middle","Bedford":"Middlesex South",
+  "Belchertown":"Hampshire","Bellingham":"Norfolk","Belmont":"Middlesex South","Berkley":"Bristol North",
+  "Berlin":"Worcester","Bernardston":"Franklin","Beverly":"Essex South","Billerica":"Middlesex North",
+  "Blackstone":"Worcester","Blandford":"Hampden","Bolton":"Worcester","Boston":"Suffolk",
+  "Bourne":"Barnstable","Boxborough":"Middlesex South","Boxford":"Essex South","Boylston":"Worcester",
+  "Braintree":"Norfolk","Brewster":"Barnstable","Bridgewater":"Plymouth","Brimfield":"Hampden",
+  "Brockton":"Plymouth","Brookfield":"Worcester","Brookline":"Norfolk","Buckland":"Franklin",
+  "Burlington":"Middlesex South","Cambridge":"Middlesex South","Canton":"Norfolk","Carlisle":"Middlesex South",
+  "Carver":"Plymouth","Charlemont":"Franklin","Charlton":"Worcester","Chatham":"Barnstable",
+  "Chelmsford":"Middlesex North","Chelsea":"Suffolk","Cheshire":"Berkshire North","Chester":"Hampden",
+  "Chesterfield":"Hampshire","Chicopee":"Hampden","Chilmark":"Dukes","Clarksburg":"Berkshire North",
+  "Clinton":"Worcester","Cohasset":"Norfolk","Colrain":"Franklin","Concord":"Middlesex South",
+  "Conway":"Franklin","Cummington":"Hampshire","Dalton":"Berkshire Middle","Danvers":"Essex South",
+  "Dartmouth":"Bristol South","Dedham":"Norfolk","Deerfield":"Franklin","Dennis":"Barnstable",
+  "Dighton":"Bristol North","Douglas":"Worcester","Dover":"Norfolk","Dracut":"Middlesex North",
+  "Dudley":"Worcester","Dunstable":"Middlesex North","Duxbury":"Plymouth","East Bridgewater":"Plymouth",
+  "East Brookfield":"Worcester","East Longmeadow":"Hampden","Eastham":"Barnstable","Easthampton":"Hampshire",
+  "Easton":"Bristol North","Edgartown":"Dukes","Egremont":"Berkshire South","Erving":"Franklin",
+  "Essex":"Essex South","Everett":"Middlesex South","Fairhaven":"Bristol South","Fall River":"Bristol Fall River",
+  "Falmouth":"Barnstable","Fitchburg":"Worcester North","Florida":"Berkshire North","Foxborough":"Norfolk",
+  "Framingham":"Middlesex South","Franklin":"Norfolk","Freetown":"Bristol Fall River","Gardner":"Worcester",
+  "Georgetown":"Essex South","Gill":"Franklin","Gloucester":"Essex South","Goshen":"Hampshire",
+  "Gosnold":"Dukes","Grafton":"Worcester","Granby":"Hampshire","Granville":"Hampden",
+  "Great Barrington":"Berkshire South","Greenfield":"Franklin","Groton":"Middlesex South","Groveland":"Essex South",
+  "Hadley":"Hampshire","Halifax":"Plymouth","Hamilton":"Essex South","Hampden":"Hampden",
+  "Hancock":"Berkshire North","Hanover":"Plymouth","Hanson":"Plymouth","Hardwick":"Worcester",
+  "Harvard":"Worcester","Harwich":"Barnstable","Hatfield":"Hampshire","Haverhill":"Essex North",
+  "Hawley":"Franklin","Heath":"Franklin","Hingham":"Plymouth","Hinsdale":"Berkshire Middle",
+  "Holbrook":"Norfolk","Holden":"Worcester","Holland":"Hampden","Holliston":"Middlesex South",
+  "Holyoke":"Hampden","Hopedale":"Worcester","Hopkinton":"Middlesex South","Hubbardston":"Worcester",
+  "Hudson":"Middlesex South","Hull":"Plymouth","Huntington":"Hampshire","Ipswich":"Essex South",
+  "Kingston":"Plymouth","Lakeville":"Plymouth","Lancaster":"Worcester","Lanesborough":"Berkshire Middle",
+  "Lawrence":"Essex North","Lee":"Berkshire Middle","Leicester":"Worcester","Lenox":"Berkshire Middle",
+  "Leominster":"Worcester North","Leverett":"Franklin","Lexington":"Middlesex South","Leyden":"Franklin",
+  "Lincoln":"Middlesex South","Littleton":"Middlesex South","Longmeadow":"Hampden","Lowell":"Middlesex North",
+  "Ludlow":"Hampden","Lunenburg":"Worcester North","Lynn":"Essex South","Lynnfield":"Essex South",
+  "Malden":"Middlesex South","Manchester":"Essex South","Mansfield":"Bristol North","Marblehead":"Essex South",
+  "Marion":"Plymouth","Marlborough":"Middlesex South","Marshfield":"Plymouth","Mashpee":"Barnstable",
+  "Mattapoisett":"Plymouth","Maynard":"Middlesex South","Medfield":"Norfolk","Medford":"Middlesex South",
+  "Medway":"Norfolk","Melrose":"Middlesex South","Mendon":"Worcester","Merrimac":"Essex South",
+  "Methuen":"Essex North","Middleborough":"Plymouth","Middlefield":"Hampshire","Middleton":"Essex South",
+  "Milford":"Worcester","Millbury":"Worcester","Millis":"Norfolk","Millville":"Worcester",
+  "Milton":"Norfolk","Monroe":"Franklin","Monson":"Hampden","Montague":"Franklin",
+  "Monterey":"Berkshire South","Montgomery":"Hampden","Mount Washington":"Berkshire South","Nahant":"Essex South",
+  "Nantucket":"Nantucket","Natick":"Middlesex South","Needham":"Norfolk","New Ashford":"Berkshire North",
+  "New Braintree":"Worcester","New Marlborough":"Berkshire South","New Salem":"Franklin","Newbury":"Essex South",
+  "Newburyport":"Essex South","Newton":"Middlesex South","Norfolk":"Norfolk","North Adams":"Berkshire North",
+  "North Andover":"Essex North","North Attleborough":"Bristol North","North Brookfield":"Worcester",
+  "North Reading":"Middlesex South","Northampton":"Hampshire","Northborough":"Worcester","Northbridge":"Worcester",
+  "Northfield":"Franklin","Norton":"Bristol North","Norwell":"Plymouth","Norwood":"Norfolk",
+  "Oak Bluffs":"Dukes","Oakham":"Worcester","Orange":"Franklin","Orleans":"Barnstable",
+  "Otis":"Berkshire Middle","Oxford":"Worcester","Palmer":"Hampden","Paxton":"Worcester",
+  "Peabody":"Essex South","Pelham":"Hampshire","Pembroke":"Plymouth","Pepperell":"Middlesex North",
+  "Peru":"Berkshire Middle","Petersham":"Worcester","Phillipston":"Worcester","Pittsfield":"Berkshire Middle",
+  "Plainfield":"Hampshire","Plainville":"Norfolk","Plymouth":"Plymouth","Plympton":"Plymouth",
+  "Princeton":"Worcester","Provincetown":"Barnstable","Quincy":"Norfolk","Randolph":"Norfolk",
+  "Raynham":"Bristol North","Reading":"Middlesex South","Rehoboth":"Bristol North","Revere":"Suffolk",
+  "Richmond":"Berkshire Middle","Rochester":"Plymouth","Rockland":"Plymouth","Rockport":"Essex South",
+  "Rowe":"Franklin","Rowley":"Essex South","Royalston":"Worcester","Russell":"Hampden",
+  "Rutland":"Worcester","Salem":"Essex South","Salisbury":"Essex South","Sandisfield":"Berkshire South",
+  "Sandwich":"Barnstable","Saugus":"Essex South","Savoy":"Berkshire North","Scituate":"Plymouth",
+  "Seekonk":"Bristol North","Sharon":"Norfolk","Sheffield":"Berkshire South","Shelburne":"Franklin",
+  "Sherborn":"Middlesex South","Shirley":"Middlesex South","Shrewsbury":"Worcester","Shutesbury":"Franklin",
+  "Somerset":"Bristol Fall River","Somerville":"Middlesex South","South Hadley":"Hampshire",
+  "Southampton":"Hampshire","Southborough":"Worcester","Southbridge":"Worcester","Southwick":"Hampden",
+  "Spencer":"Worcester","Springfield":"Hampden","Sterling":"Worcester","Stockbridge":"Berkshire Middle",
+  "Stoneham":"Middlesex South","Stoughton":"Norfolk","Stow":"Middlesex South","Sturbridge":"Worcester",
+  "Sudbury":"Middlesex South","Sunderland":"Franklin","Sutton":"Worcester","Swampscott":"Essex South",
+  "Swansea":"Bristol Fall River","Taunton":"Bristol North","Templeton":"Worcester","Tewksbury":"Middlesex North",
+  "Tisbury":"Dukes","Tolland":"Hampden","Topsfield":"Essex South","Townsend":"Middlesex North",
+  "Truro":"Barnstable","Tyngsborough":"Middlesex North","Tyringham":"Berkshire Middle","Upton":"Worcester",
+  "Uxbridge":"Worcester","Wakefield":"Middlesex South","Wales":"Hampden","Walpole":"Norfolk",
+  "Waltham":"Middlesex South","Ware":"Hampshire","Wareham":"Plymouth","Warren":"Worcester",
+  "Warwick":"Franklin","Washington":"Berkshire Middle","Watertown":"Middlesex South","Wayland":"Middlesex South",
+  "Webster":"Worcester","Wellesley":"Norfolk","Wellfleet":"Barnstable","Wendell":"Franklin",
+  "Wenham":"Essex South","West Boylston":"Worcester","West Bridgewater":"Plymouth","West Brookfield":"Worcester",
+  "West Newbury":"Essex South","West Springfield":"Hampden","West Stockbridge":"Berkshire Middle",
+  "West Tisbury":"Dukes","Westborough":"Worcester","Westfield":"Hampden","Westford":"Middlesex North",
+  "Westhampton":"Hampshire","Westminster":"Worcester North","Weston":"Middlesex South","Westport":"Bristol South",
+  "Westwood":"Norfolk","Weymouth":"Norfolk","Whately":"Franklin","Whitman":"Plymouth",
+  "Wilbraham":"Hampden","Williamsburg":"Hampshire","Williamstown":"Berkshire North","Wilmington":"Middlesex South",
+  "Winchendon":"Worcester North","Winchester":"Middlesex South","Windsor":"Berkshire North","Winthrop":"Suffolk",
+  "Woburn":"Middlesex South","Worcester":"Worcester","Worthington":"Hampshire","Wrentham":"Norfolk",
+  "Yarmouth":"Barnstable"
+};
+
+// ── Normalize town name ───────────────────────────────────────────────────────
+function normalizeTown(raw) {
+  if (!raw) return '';
+  return decodeURIComponent(raw)
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase())
+    .replace(/\bMa\b|\bMass\.?\b/gi, '')
+    .trim();
+}
+
+// ── SVG icons ─────────────────────────────────────────────────────────────────
+const ICON_DOC = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3">
+  <path d="M3 2h7l3 3v9H3V2z"/><path d="M10 2v3h3"/>
+  <path d="M5 8h6M5 10.5h4" stroke-linecap="round"/>
+</svg>`;
+const ICON_EXT = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3">
+  <path d="M7 3H3v10h10V9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M10 2h4v4M14 2l-6 6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+const ICON_COPY = `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2">
+  <rect x="1" y="3" width="7" height="8" rx="1"/>
+  <path d="M4 3V2a1 1 0 011-1h5a1 1 0 011 1v7a1 1 0 01-1 1H9"/>
+</svg>`;
+const ICON_CHECK = `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+  <path d="M2 6l3 3 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+
+// ── Render helpers ────────────────────────────────────────────────────────────
+function cell(key, val, accent=false, big=false) {
+  const cls = !val ? 'empty' : accent ? 'accent' : big ? 'big' : '';
+  return `<div class="data-cell">
+    <div class="data-key">${key}</div>
+    <div class="data-val ${cls}">${val || '—'}</div>
+  </div>`;
+}
+
+function cellFull(key, val) {
+  return `<div class="data-cell full">
+    <div class="data-key">${key}</div>
+    <div class="data-val">${val || '—'}</div>
+  </div>`;
+}
+
+// ── Copy to clipboard ─────────────────────────────────────────────────────────
+function copyText(text, btnId) {
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.classList.add('copied');
+    btn.innerHTML = `${ICON_CHECK} Copied`;
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = `${ICON_COPY} Copy book &amp; page`;
+    }, 2000);
+  });
+}
+
+// ── Main render ───────────────────────────────────────────────────────────────
+function render() {
+  const params  = new URLSearchParams(window.location.search);
+  const card    = document.getElementById('card');
+
+  // Read parameters (AGOL popup tokens map to these)
+  const book    = params.get('book')   || params.get('LS_BOOK')   || params.get('ls_book')   || '';
+  const page    = params.get('page')   || params.get('LS_PAGE')   || params.get('ls_page')   || '';
+  const town    = params.get('town')   || params.get('TOWN')      || params.get('CITY')       || '';
+  const addr    = params.get('addr')   || params.get('SITE_ADDR') || params.get('site_addr')  || '';
+  const owner   = params.get('owner')  || params.get('OWNER1')    || params.get('owner1')     || '';
+  const locid   = params.get('locid')  || params.get('LOC_ID')    || params.get('loc_id')     || '';
+
+  // ── No params at all → show usage instructions ──
+  if (!book && !page && !town && !addr) {
+    card.innerHTML = `
+      <div class="card-header">
+        <div>
+          <div class="card-title">MA Deed Lookup — Setup Guide</div>
+          <div class="card-sub">Configure your ArcGIS Online pop-up to pass parameters</div>
+        </div>
+        <span class="badge warning"><span class="badge-dot"></span>NO PARAMS</span>
+      </div>
+      <div class="empty-state" style="text-align:left;padding:24px 28px 28px">
+        <div class="section-label">Required URL format</div>
+        <div class="empty-code">...deed_lookup.html?<br>
+  book={LS_BOOK}<br>
+  &amp;page={LS_PAGE}<br>
+  &amp;town={CITY}<br>
+  &amp;addr={SITE_ADDR}<br>
+  &amp;owner={OWNER1}<br>
+  &amp;locid={LOC_ID}</div>
+        <div style="margin-top:20px" class="section-label">AGOL pop-up action steps</div>
+        <ol style="font-size:13px;color:var(--ink2);line-height:2;padding-left:18px">
+          <li>Open your web map in Map Viewer</li>
+          <li>Select the parcel layer → Configure Pop-up</li>
+          <li>Add a <strong>Pop-up Action</strong> of type <em>Go to URL</em></li>
+          <li>Set the URL to this page with the tokens above</li>
+          <li>Label it <em>"Open Deed Search"</em></li>
+        </ol>
+      </div>`;
+    return;
+  }
+
+  // ── Resolve registry ────────────────────────────────────────────────────────
+  const townNorm  = normalizeTown(town);
+  const regKey    = TOWN_TO_REGISTRY[townNorm];
+  const registry  = regKey ? REGISTRIES[regKey] : null;
+
+  // ── Determine status badge ──────────────────────────────────────────────────
+  let badge = '';
+  const hasBookPage = book && page && book !== 'Null' && page !== 'Null' && book !== 'null' && page !== 'null';
+
+  if (!hasBookPage && !registry) {
+    badge = `<span class="badge error"><span class="badge-dot"></span>MISSING DATA</span>`;
+  } else if (!hasBookPage) {
+    badge = `<span class="badge warning"><span class="badge-dot"></span>NO BOOK/PAGE</span>`;
+  } else if (!registry) {
+    badge = `<span class="badge warning"><span class="badge-dot"></span>REGISTRY UNKNOWN</span>`;
+  } else {
+    badge = `<span class="badge matched"><span class="badge-dot"></span>MATCHED</span>`;
+  }
+
+  // ── Parcel header ───────────────────────────────────────────────────────────
+  const displayAddr = addr ? `${addr}${townNorm ? ', ' + townNorm : ''}` : (townNorm || 'Unknown address');
+
+  // ── Book/page display ───────────────────────────────────────────────────────
+  const bookVal = (hasBookPage) ? book : null;
+  const pageVal = (hasBookPage) ? page : null;
+
+  // ── Registry section HTML ───────────────────────────────────────────────────
+  let registryHTML = '';
+  if (registry) {
+    registryHTML = `
+    <div class="registry-section">
+      <div class="section-label">Registry District</div>
+      <div class="registry-row">
+        <div class="registry-icon">${ICON_DOC}</div>
+        <div>
+          <div class="registry-name">${registry.name}</div>
+          <div class="registry-towns">${regKey}</div>
+        </div>
+      </div>
+      <div class="search-tip">
+        <strong>Book/page search:</strong> ${registry.tip}
+      </div>
+    </div>`;
+  } else if (townNorm) {
+    registryHTML = `
+    <div class="registry-section">
+      <div class="section-label">Registry District</div>
+      <div class="error-box">Could not match town "<strong>${townNorm}</strong>" to a registry district. 
+      Check the TOWN/CITY field value in your parcel layer.</div>
+    </div>`;
+  }
+
+  // ── Action button ───────────────────────────────────────────────────────────
+  const btnClass   = registry ? '' : ' disabled';
+  const btnTarget  = registry ? `href="${registry.url}" target="_blank" rel="noopener"` : '';
+  const copyVal    = hasBookPage ? `Book: ${book}  |  Page: ${page}` : '';
+  const copyRow    = hasBookPage ? `
+    <div class="copy-row">
+      <button class="btn-copy" id="copy-btn" onclick="copyText('${copyVal}','copy-btn')">
+        ${ICON_COPY} Copy book &amp; page
+      </button>
+      ${owner ? `<button class="btn-copy" id="copy-owner" onclick="copyText('${owner.replace(/'/g,"\\'")}','copy-owner')">
+        ${ICON_COPY} Copy owner name
+      </button>` : ''}
+    </div>` : '';
+
+  // ── Assemble card ───────────────────────────────────────────────────────────
+  card.innerHTML = `
+    <div class="card-header">
+      <div>
+        <div class="card-title">${displayAddr}</div>
+        <div class="card-sub">${locid || 'LOC_ID not provided'}</div>
+      </div>
+      ${badge}
+    </div>
+
+    <div class="data-section">
+      <div class="section-label">Deed Reference</div>
+      <div class="data-grid">
+        ${cell('LS_BOOK', bookVal, false, true)}
+        ${cell('LS_PAGE', pageVal, false, true)}
+        ${cell('TOWN', townNorm || null, true)}
+        ${cell('OWNER', owner || null)}
+        ${addr ? cellFull('ADDRESS', addr + (townNorm ? ', ' + townNorm + ', MA' : '')) : ''}
+      </div>
+
+      ${!hasBookPage ? `<div style="margin-top:12px" class="search-tip" style="border-left-color:var(--amber)">
+        <strong>Note:</strong> This parcel has no LS_BOOK / LS_PAGE value in MassGIS data. 
+        The deed may be unrecorded, recently recorded, or in the Land Court system. 
+        Search the registry by owner name or address instead.
+      </div>` : ''}
+    </div>
+
+    ${registryHTML}
+
+    <div class="action-section">
+      <a class="btn-deed${btnClass}" ${btnTarget}>
+        ${ICON_EXT}
+        Open ${registry ? registry.name : 'Registry'} deed search
+      </a>
+      ${copyRow}
+    </div>`;
+}
+
+render();
+</script>
+</body>
+</html>
