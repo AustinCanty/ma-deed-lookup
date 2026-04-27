@@ -667,17 +667,10 @@ function render() {
   const btnClass  = registry ? '' : ' disabled';
   const copyVal   = hasBookPage ? `${book},${page}` : '';
   const btnClick  = (registry && hasBookPage)
-    ? `onclick="navigator.clipboard.writeText('${copyVal}').finally(()=>{ window.top.location.href='${registry.url}'; }); return false;"`
+    ? `onclick="navigator.clipboard.writeText('${copyVal}').finally(()=>{ window.open('${registry.url}','_blank','noopener'); }); return false;"`
     : (registry && !hasBookPage)
-    ? `onclick="window.blank.location.href='${registry.url}'; return false;"`
+    ? `onclick="window.open('${registry.url}','_blank','noopener'); return false;"`
     : '';
-
-  const copyRow = (owner) ? `
-    <div class="copy-row">
-      <button class="btn-copy" id="copy-owner" onclick="copyText('${(owner||'').replace(/'/g,"\\'")}','copy-owner')">
-        ${ICON_COPY} Copy owner name
-      </button>
-    </div>` : '';
 
   // ── Assemble card ───────────────────────────────────────────────────────────
   card.innerHTML = `
@@ -716,7 +709,6 @@ function render() {
         ${ICON_EXT}
         Open ${registry ? registry.name : 'Registry'} deed search
       </a>
-      ${copyRow}
     </div>`;
 }
 
