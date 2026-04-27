@@ -664,17 +664,19 @@ function render() {
   }
 
   // ── Action button ───────────────────────────────────────────────────────────
-  const btnClass   = registry ? '' : ' disabled';
-  const btnTarget  = registry ? `href="${registry.url}" target="_top" rel="noopener"` : '';
-  const copyVal    = hasBookPage ? `Book: ${book}  |  Page: ${page}` : '';
-  const copyRow    = hasBookPage ? `
+  const btnClass  = registry ? '' : ' disabled';
+  const copyVal   = hasBookPage ? `${book},${page}` : '';
+  const btnClick  = (registry && hasBookPage)
+    ? `onclick="navigator.clipboard.writeText('${copyVal}').finally(()=>{ window.top.location.href='${registry.url}'; }); return false;"`
+    : (registry && !hasBookPage)
+    ? `onclick="window.top.location.href='${registry.url}'; return false;"`
+    : '';
+
+  const copyRow = (owner) ? `
     <div class="copy-row">
-      <button class="btn-copy" id="copy-btn" onclick="copyText('${copyVal}','copy-btn')">
-        ${ICON_COPY} Copy book &amp; page
-      </button>
-      ${owner ? `<button class="btn-copy" id="copy-owner" onclick="copyText('${owner.replace(/'/g,"\\'")}','copy-owner')">
+      <button class="btn-copy" id="copy-owner" onclick="copyText('${(owner||'').replace(/'/g,"\\'")}','copy-owner')">
         ${ICON_COPY} Copy owner name
-      </button>` : ''}
+      </button>
     </div>` : '';
 
   // ── Assemble card ───────────────────────────────────────────────────────────
@@ -707,7 +709,10 @@ function render() {
     ${registryHTML}
 
     <div class="action-section">
-      <a class="btn-deed${btnClass}" ${btnTarget}>
+      ${hasBookPage ? `<div style="margin-bottom:8px;font-size:11px;color:var(--ink3);font-family:var(--mono);text-align:center;letter-spacing:0.04em">
+        BOOK &amp; PAGE COPIED TO CLIPBOARD ON CLICK
+      </div>` : ''}
+      <a class="btn-deed${btnClass}" href="#" ${btnClick}>
         ${ICON_EXT}
         Open ${registry ? registry.name : 'Registry'} deed search
       </a>
