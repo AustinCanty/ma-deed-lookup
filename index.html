@@ -669,7 +669,7 @@ function render() {
   const btnClick  = (registry && hasBookPage)
     ? `onclick="navigator.clipboard.writeText('${copyVal}').finally(()=>{ window.top.location.href='${registry.url}'; }); return false;"`
     : (registry && !hasBookPage)
-    ? `onclick="window.top.location.href='${registry.url}'; return false;"`
+    ? `onclick="window.blank.location.href='${registry.url}'; return false;"`
     : '';
 
   const copyRow = (owner) ? `
