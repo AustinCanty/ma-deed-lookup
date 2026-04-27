@@ -665,7 +665,7 @@ function render() {
 
   // ── Action button ───────────────────────────────────────────────────────────
   const btnClass   = registry ? '' : ' disabled';
-  const btnTarget  = registry ? `href="${registry.url}" target="_blank" rel="noopener"` : '';
+  const btnTarget  = registry ? `href="${registry.url}" target="_top" rel="noopener"` : '';
   const copyVal    = hasBookPage ? `Book: ${book}  |  Page: ${page}` : '';
   const copyRow    = hasBookPage ? `
     <div class="copy-row">
